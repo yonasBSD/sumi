@@ -53,7 +53,7 @@
 
   3. Open the Dashboard:
   Once running, open your browser at:
-   http://localhost:8080 (http://localhost:8080)
+   http://localhost:8080
 
   ---
 
