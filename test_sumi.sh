@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Iniciando prueba de sumi..."
+echo "🚀 Starting sumi process test..."
 echo "------------------------------"
 
 for i in {1..20}
@@ -8,16 +8,16 @@ do
     timestamp=$(date +"%T")
     
     if (( i % 3 == 0 )); then
-        echo "[$timestamp] ❌ ERROR: Ocurrió un fallo en el paso $i" >&2
+        echo "[$timestamp] ❌ ERROR: System failure detected at step $i" >&2
         sleep 0.2
-        echo "[$timestamp] ⚠️  REINTENTANDO: Intentando recuperar sistema..." >&2
+        echo "[$timestamp] ⚠️  RETRYING: Attempting to recover process..." >&2
     else
-        echo "[$timestamp] ✅ INFO: Procesando tarea número $i..."
-        echo "[$timestamp] ⚙️  STATUS: Todo funcionando correctamente."
+        echo "[$timestamp] ✅ INFO: Processing task number $i..."
+        echo "[$timestamp] ⚙️  STATUS: Everything running smoothly."
     fi
     
     sleep 0.5
 done
 
 echo "------------------------------"
-echo "✅ Prueba finalizada."
+echo "✅ Test completed successfully."
