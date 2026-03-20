@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
-use tokio::sync::{broadcast, mpsc};
+use std::sync::Arc;
+use tokio::sync::{broadcast, mpsc, Mutex};
 use owo_colors::OwoColorize;
 
 use crate::log::event::{LogEvent, LogSource};
@@ -12,6 +13,7 @@ impl App {
     pub async fn run(
         command: Vec<String>,
         log_tx: broadcast::Sender<Log>,
+        history: Arc<Mutex<Vec<Log>>>,
     ) -> anyhow::Result<()> {
         let (tx, mut rx) = mpsc::channel::<LogEvent>(100);
 
@@ -44,13 +46,20 @@ impl App {
                 }
             }
             
-            let _ = log_tx.send(Log {
+            let log = Log {
                 message: log_message,
                 source: match event.source {
                     LogSource::Stdout => "stdout".to_string(),
                     LogSource::Stderr => "stderr".to_string(),
                 },
-            });
+            };
+
+            // Store in history and broadcast under the same lock to avoid race conditions with new subscriptions
+            {
+                let mut history = history.lock().await;
+                history.push(log.clone());
+                let _ = log_tx.send(log);
+            }
         }
 
         Ok(())

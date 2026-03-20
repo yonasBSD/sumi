@@ -4,7 +4,8 @@ use axum::{
     Router,
 };
 use std::net::SocketAddr;
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use tokio::sync::{broadcast, Mutex};
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::web::ws::{ws_handler, AppState};
@@ -17,9 +18,10 @@ pub struct Log {
     pub source: String,
 }
 
-pub async fn start(tx: broadcast::Sender<Log>) {
+pub async fn start(tx: broadcast::Sender<Log>, history: Arc<Mutex<Vec<Log>>>) {
     let app_state = AppState {
         tx,
+        history,
     };
 
     let app = app(app_state);

@@ -7,7 +7,8 @@ mod web;
 use clap::Parser;
 use cli::args::Args;
 use core::app::App;
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use tokio::sync::{broadcast, Mutex};
 use web::server::Log;
 
 #[tokio::main]
@@ -20,11 +21,13 @@ async fn main() -> anyhow::Result<()> {
     println!("──────────────────────────────────");
 
     let (log_tx, _) = broadcast::channel::<Log>(1000);
+    let history = Arc::new(Mutex::new(Vec::new()));
 
     let web_log_tx = log_tx.clone();
+    let web_history = history.clone();
     tokio::spawn(async move {
-        web::server::start(web_log_tx).await;
+        web::server::start(web_log_tx, web_history).await;
     });
 
-    App::run(args.command, log_tx).await
+    App::run(args.command, log_tx, history).await
 }

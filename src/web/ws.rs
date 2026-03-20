@@ -6,13 +6,15 @@ use axum::{
     response::Response,
 };
 use futures_util::{sink::SinkExt, stream::StreamExt};
-use tokio::sync::broadcast;
+use std::sync::Arc;
+use tokio::sync::{broadcast, Mutex};
 
 use super::server::Log;
 
 #[derive(Clone)]
 pub struct AppState {
     pub tx: broadcast::Sender<Log>,
+    pub history: Arc<Mutex<Vec<Log>>>,
 }
 
 pub async fn ws_handler(
@@ -24,7 +26,28 @@ pub async fn ws_handler(
 
 async fn handle_socket(socket: WebSocket, state: AppState) {
     let (mut sender, mut receiver) = socket.split();
-    let mut rx = state.tx.subscribe();
+    
+    let mut rx;
+    let history_snapshot;
+
+    // send history and subscribe under the same lock
+    {
+        let history = state.history.lock().await;
+        history_snapshot = history.clone();
+        rx = state.tx.subscribe();
+    }
+
+    // Send history snapshot
+    for log in history_snapshot {
+        let json_log = serde_json::to_string(&log).unwrap();
+        if sender
+            .send(Message::Text(json_log))
+            .await
+            .is_err()
+        {
+            return;
+        }
+    }
 
     // spawn a task to send messages to the client
     let mut send_task = tokio::spawn(async move {
