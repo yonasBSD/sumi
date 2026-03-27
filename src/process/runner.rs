@@ -41,5 +41,7 @@ pub async fn run(command: Vec<String>, sender: mpsc::Sender<LogEvent>) -> anyhow
         }
     }
 
+    let _ = child.wait().await;
+
     Ok(())
 }
