@@ -1,8 +1,7 @@
 use axum::{
     routing::get,
-    response::{Html, IntoResponse},
+    response::Html,
     Router,
-    http::{header, HeaderMap},
 };
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -37,15 +36,9 @@ pub async fn start(tx: broadcast::Sender<Log>, history: Arc<Mutex<Vec<Log>>>) {
 fn app(app_state: AppState) -> Router {
     // Incluimos el HTML directamente en el binario
     let index_html = include_str!("../../static/index.html");
-    let favicon = include_bytes!("../../static/sumi.ico");
 
     Router::new()
         .route("/", get(move || async move { Html(index_html) }))
-        .route("/sumi.ico", get(move || async move {
-            let mut headers = HeaderMap::new();
-            headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("image/x-icon"));
-            (headers, favicon.to_vec())
-        }))
         .route("/ws", get(ws_handler))
         .with_state(app_state)
         .layer(
